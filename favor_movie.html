@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔鬼交易 - 驚悚生存挑戰</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@900&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        :root {
+            --blood-red: #8b0000;
+            --dark-bg: #0a0a0a;
+            --text-gray: #ccc;
+            --highlight: #f1c40f;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--dark-bg);
+            /* 驚悚顆粒感背景 */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E");
+            font-family: 'Noto Serif TC', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #333;
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 裝飾線條 */
+        .container::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: linear-gradient(90deg, transparent, var(--blood-red), transparent);
+        }
+
+        /* 海報區 */
+        .poster-box {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+            position: relative;
+        }
+        .poster-box img { width: 100%; display: block; }
+        
+        .release-date {
+            background: var(--blood-red);
+            color: white;
+            padding: 5px 15px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            font-family: 'Noto Sans TC';
+        }
+
+        h1 { 
+            font-size: 2rem; margin: 10px 0; color: #fff; 
+            text-shadow: 2px 2px 5px #000; letter-spacing: 3px;
+        }
+        
+        p { color: var(--text-gray); font-family: 'Noto Sans TC'; font-size: 0.95rem; line-height: 1.6; }
+
+        /* 按鈕群 */
+        .btn {
+            display: block; width: 100%; padding: 15px; margin-top: 15px;
+            border: none; border-radius: 5px; cursor: pointer;
+            font-size: 1.1rem; font-weight: bold; transition: 0.3s;
+            font-family: 'Noto Sans TC';
+        }
+        
+        .btn-ig {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: white;
+        }
+        
+        .btn-start {
+            background: var(--blood-red); color: white;
+            box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+        }
+        .btn-start:hover { background: #a00000; transform: scale(1.02); }
+
+        .locked-mask {
+            margin-top: 15px; padding: 15px; border: 1px dashed #555; color: #666;
+            font-size: 0.9rem; border-radius: 5px;
+        }
+
+        /* 題目區 */
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;
+        }
+        .question-progress { color: var(--highlight); font-weight: bold; font-size: 1.2rem; }
+        
+        .question-text { font-size: 1.3rem; margin-bottom: 25px; min-height: 3em; display: flex; align-items: center; justify-content: center;}
+        
+        .option-btn {
+            background: #222; color: #ccc; border: 1px solid #444;
+            padding: 15px; margin-bottom: 10px; width: 100%; text-align: left;
+            cursor: pointer; transition: 0.2s; font-family: 'Noto Sans TC';
+        }
+        .option-btn:hover { background: #333; border-color: #666; }
+        .option-btn.correct { background: #1b5e20 !important; border-color: #2ecc71; color: white; }
+        .option-btn.wrong { background: #680808 !important; border-color: var(--blood-red); color: white; }
+
+        /* 錯誤提示層 */
+        #fail-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 10;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .fail-text { font-size: 2rem; color: var(--blood-red); font-weight: bold; margin-bottom: 10px; }
+
+        /* 證書樣式 */
+        .cert-card {
+            background: #111; border: 2px solid var(--blood-red);
+            padding: 20px; margin-top: 20px; position: relative;
+            background-image: url('favor.jpg'); 
+            background-size: cover; background-position: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .cert-overlay {
+            background: rgba(0,0,0,0.85);
+            padding: 20px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .cert-title { font-size: 1.8rem; color: var(--blood-red); margin-bottom: 10px; letter-spacing: 2px; }
+        .cert-name { font-size: 2rem; color: white; margin: 15px 0; border-bottom: 1px solid #555; display: inline-block; padding-bottom: 5px;}
+        .cert-text { font-size: 1rem; color: #ccc; font-family: 'Noto Sans TC'; }
+        .cert-footer { margin-top: 20px; font-size: 1.1rem; color: var(--highlight); font-weight: bold; letter-spacing: 2px; }
+
+        .input-name {
+            width: 100%; padding: 12px; background: #222; border: 1px solid #555;
+            color: white; text-align: center; font-size: 1.2rem; margin-bottom: 15px;
+        }
+
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* 失敗時的震動動畫 */
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-container">
+        
+        <!-- 1. 首頁 -->
+        <div id="screen-start" class="fade-in">
+            <div class="poster-box">
+                <!-- 記得放 favor.jpg -->
+                <img src="favor.jpg" alt="魔鬼交易">
+            </div>
+            
+            <div class="release-date">1.16 以物易惡</div>
+            <h1>魔鬼交易 X RM</h1>
+            <p style="color:var(--blood-red); font-weight:bold; font-size:1.1rem;">
+                ⚠️ 警告：地獄生存模式
+            </p>
+            <p>
+                <b>連續答對 7 題</b> 才能存活<br>
+                只要答錯一題，立刻重頭開始！<br>
+                你有把握拿走紀念證書嗎？
+            </p>
+
+            <div id="lock-area">
+                <button class="btn btn-ig" onclick="unlockGame()">📸 先追蹤 IG 解鎖挑戰</button>
+                <div class="locked-mask">🔒 需追蹤 @kinpletw 才能進行生存挑戰</div>
+            </div>
+
+            <button id="start-btn" class="btn btn-start hidden" onclick="initGame()">🔥 開始挑戰</button>
+        </div>
+
+        <!-- 2. 遊戲頁 -->
+        <div id="screen-game" class="hidden fade-in">
+            <div class="status-bar">
+                <span>生存進度</span>
+                <span class="question-progress"><span id="q-curr">1</span> / 7</span>
+            </div>
+            
+            <div class="question-text" id="q-text">題目載入中...</div>
+            <div id="options-box"></div>
+
+            <!-- 失敗遮罩 (預設隱藏) -->
+            <div id="fail-overlay" class="hidden">
+                <div class="fail-text">☠️ 挑戰失敗</div>
+                <p>你被魔鬼抓走了...</p>
+                <p style="color:#ccc;">正在重置關卡...</p>
+            </div>
+        </div>
+
+        <!-- 3. 輸入名字頁 -->
+        <div id="screen-input" class="hidden fade-in">
+            <h2 style="color:var(--highlight)">🎉 倖存者確認</h2>
+            <p>太強了！你成功連續通過 7 道關卡！<br>請留下名字製作紀念證書。</p>
+            <input type="text" id="player-name" class="input-name" placeholder="輸入你的名字" maxlength="10">
+            <button class="btn btn-start" onclick="generateCert()">生成紀念證書</button>
+        </div>
+
+        <!-- 4. 證書頁 -->
+        <div id="screen-cert" class="hidden fade-in">
+            <h2 style="font-size:1.2rem; margin-bottom:10px;">📸 請截圖留念</h2>
+            
+            <div class="cert-card">
+                <div class="cert-overlay">
+                    <div class="cert-title">生存證明書</div>
+                    <div class="cert-text">茲證明</div>
+                    <div class="cert-name" id="cert-name-display"></div>
+                    <div class="cert-text">成功通過地獄試煉，見證</div>
+                    <div class="cert-footer">1.16 《魔鬼交易》<br>以物易惡</div>
+                </div>
+            </div>
+
+            <button class="btn" style="background:#333; margin-top:20px;" onclick="location.reload()">再玩一次</button>
+        </div>
+
+    </div>
+
+    <script>
+        // 設定
+        const QUESTIONS_PER_GAME = 7;
+        
+        // 21題 完整題庫
+        const allQuestions = [
+            // 電影題
+            { q: "電影《魔鬼交易》中，睽違 5 年重返大銀幕的女主角是誰？", options: ["宋智孝", "全智賢", "孫藝珍", "朴信惠"], ans: "宋智孝" },
+            { q: "飾演母親「春瑞」的金赫拉，曾出演哪部爆紅韓劇？", options: ["黑暗榮耀", "魷魚遊戲", "寄生上流", "非常律師禹英禑"], ans: "黑暗榮耀" },
+            { q: "飾演父親「永範」的金秉澈，曾出演哪部經典韓劇？", options: ["太陽的後裔", "來自星星的你", "鬼怪", "繼承者們"], ans: "太陽的後裔" },
+            { q: "《魔鬼交易》的電影宣傳標語是「恩惠 X 詛咒 X ？」", options: ["交換", "死亡", "復活", "復仇"], ans: "交換" },
+            { q: "這部電影即將在幾月幾號上映？", options: ["1.16", "12.31", "2.14", "1.1"], ans: "1.16" },
+            { q: "宋智孝飾演的妻子「善熙」，在劇中有什麼身體狀況？", options: ["失明", "失去雙腿", "失去聽力", "失去說話能力"], ans: "失明" },
+            { q: "夫妻倆原本盼望什麼事情發生在癱瘓的兒子身上？", options: ["奇蹟", "中樂透", "考上大學", "出國留學"], ans: "奇蹟" },
+            { q: "故事中，是誰出現為這個社區帶來了奇異的奇蹟？", options: ["神秘的老人", "年輕的醫生", "流浪狗", "村長"], ans: "神秘的老人" },
+            { q: "金赫拉飾演的「春瑞」，她的兒子發生了什麼事？", options: ["突然失去行走能力", "突然失蹤", "突然失明", "被綁架"], ans: "突然失去行走能力" },
+            { q: "電影海報上的標語寫著：「所有饋贈，都有____」？", options: ["代價", "驚喜", "快樂", "結局"], ans: "代價" },
+            { q: "英文片名《The Favor》在本片中連結了哪個概念？", options: ["以物易惡", "無償奉獻", "慈善捐款", "友情贊助"], ans: "以物易惡" },
+            { q: "善熙（宋智孝 飾）原本憑藉什麼來忍受失明的痛苦？", options: ["堅定的信仰", "酒精", "丈夫的謊言", "藥物"], ans: "堅定的信仰" },
+            { q: "永範（金秉澈 飾）表面冷靜，內心其實隱藏著什麼？", options: ["深深的愧疚", "想殺人的衝動", "想要離婚", "鉅額債務"], ans: "深深的愧疚" },
+            { q: "春瑞懷疑自己家遭遇的不幸，與誰家獲得的奇蹟有關？", options: ["善熙家", "村長家", "神秘老人家", "警察局"], ans: "善熙家" },
+            { q: "這部電影主要探討的人性議題是？", options: ["祝福背後的危機與貪婪", "科技帶來的災難", "戰爭的殘酷", "跨國戀愛的困難"], ans: "祝福背後的危機與貪婪" },
+            // 發行商題
+            { q: "請問《魔鬼交易》在台灣的發行片商是？", options: ["可樂電影", "華映娛樂", "車庫娛樂", "甲上娛樂"], ans: "可樂電影" },
+            // Running Man 題
+            { q: "宋智孝在韓綜《Running Man》中最知名的稱號是？", options: ["王牌智孝 (Ace)", "背叛者", "長頸鹿", "能力者"], ans: "王牌智孝 (Ace)" },
+            { q: "宋智孝在 RM 中曾與哪位成員組成「週一情侶」？", options: ["Gary", "金鍾國", "劉在錫", "李光洙"], ans: "Gary" },
+            { q: "《Running Man》最經典的招牌遊戲環節是？", options: ["撕名牌", "跳繩", "躲避球", "接力賽跑"], ans: "撕名牌" },
+            { q: "宋智孝因為運氣極佳，在節目中還有什麼稱號？", options: ["金手", "臭手", "水手", "黑手"], ans: "金手" },
+            { q: "宋智孝因為常在節目中發火，也被成員戲稱為？", options: ["不良智孝", "溫柔智孝", "可愛智孝", "聰明智孝"], ans: "不良智孝" }
+        ];
+
+        let currentQuestions = [];
+        let qIndex = 0;
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // 解鎖
+        function unlockGame() {
+            window.open('https://www.instagram.com/kinpletw/', '_blank');
+            document.getElementById('lock-area').style.display = 'none';
+            document.getElementById('start-btn').classList.remove('hidden');
+        }
+
+        // 初始化並開始遊戲
+        function initGame() {
+            // 切換畫面
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            
+            // 重置並開始新的一輪
+            resetAndStartRound();
+        }
+
+        function resetAndStartRound() {
+            qIndex = 0;
+            // 每次都重新隨機抽 7 題，確保重玩時題目不一樣
+            currentQuestions = shuffle([...allQuestions]).slice(0, QUESTIONS_PER_GAME);
+            
+            // 選項洗牌
+            currentQuestions.forEach(q => {
+                q.shuffledOptions = shuffle([...q.options]);
+            });
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            // 檢查是否通關
+            if (qIndex >= QUESTIONS_PER_GAME) {
+                endGame();
+                return;
+            }
+
+            const qData = currentQuestions[qIndex];
+            document.getElementById('q-text').innerText = qData.q;
+            document.getElementById('q-curr').innerText = qIndex + 1;
+            
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = '';
+
+            qData.shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, qData.ans, btn);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct, btn) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true); // 鎖定
+
+            if (selected === correct) {
+                // 答對邏輯
+                btn.classList.add('correct');
+                setTimeout(() => {
+                    qIndex++;
+                    loadQuestion();
+                }, 800); // 0.8秒後下一題
+            } else {
+                // 答錯邏輯 (生存模式啟動)
+                btn.classList.add('wrong');
+                // 顯示正確答案
+                allBtns.forEach(b => {
+                    if (b.innerText === correct) b.classList.add('correct');
+                });
+
+                // 震動特效
+                document.getElementById('main-container').classList.add('shake');
+                
+                // 顯示失敗遮罩，然後重置
+                setTimeout(() => {
+                    document.getElementById('fail-overlay').classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        // 2秒後重置
+                        document.getElementById('fail-overlay').classList.add('hidden');
+                        document.getElementById('main-container').classList.remove('shake');
+                        // 重新開始一輪
+                        resetAndStartRound();
+                    }, 2000);
+                }, 1000);
+            }
+        }
+
+        function endGame() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-input').classList.remove('hidden');
+        }
+
+        function generateCert() {
+            const name = document.getElementById('player-name').value.trim();
+            if (!name) {
+                alert("請輸入名字！");
+                return;
+            }
+
+            document.getElementById('cert-name-display').innerText = name;
+            document.getElementById('screen-input').classList.add('hidden');
+            document.getElementById('screen-cert').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
